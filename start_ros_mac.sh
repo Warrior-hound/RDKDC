@@ -41,7 +41,7 @@ WORKSPACE_SRC="$WORKSPACE/src"
 BRIDGE_DIR="$WORKSPACE/rdkdc_bridge"
 MATLAB_DIR="$WORKSPACE/matlab"
 SETUP_PKG_DIR="$WORKSPACE_SRC/rdkdc_setup"
-VNC_URL="http://${HOST_ADDRESS}:${VNC_PORT}/vnc_lite.html?autoconnect=true&resize=remote&quality=9&compression=0"
+VNC_URL="http://${HOST_ADDRESS}:${VNC_PORT}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=0"
 BRIDGE_URL="http://${HOST_ADDRESS}:${BRIDGE_PORT}"
 
 resolve_docker() {
@@ -815,6 +815,9 @@ fi
 echo "Building RDKDC launch package in /root/ros2_ws..."
 "$DOCKER" exec "$CONTAINER_NAME" bash -lc "source /opt/ros/jazzy/setup.bash && cd /root/ros2_ws && colcon build --packages-select rdkdc_setup --symlink-install"
 
+echo "Updating container shell profile..."
+"$DOCKER" exec "$CONTAINER_NAME" bash -c "grep -q 'rdkdc_setup' /root/.bashrc || printf '\n# RDKDC workspace\nsource /root/ros2_ws/install/setup.bash\nexport DISPLAY=:1\n' >> /root/.bashrc"
+
 export RDKDC_BRIDGE_URL="$BRIDGE_URL"
 
 if [ "$SKIP_MATLAB_TEST" -eq 0 ]; then
@@ -832,19 +835,10 @@ cat <<EOF
 
 RDKDC ROS 2 Jazzy desktop is ready.
 VNC/RViz desktop: $VNC_URL
-HTTP bridge: $BRIDGE_URL
-Host workspace: $WORKSPACE
-Container workspace: /root/ros2_ws
-
-In MATLAB, run:
-  addpath('$MATLAB_DIR')
-  setenv('RDKDC_BRIDGE_URL','$BRIDGE_URL')
-  ur5e = ur5_interface();
 
 Inside the Docker/VNC terminal, launch UR5e/RViz with:
-  source /root/ros2_ws/install/setup.bash
-  ros2 launch rdkdc_setup ur5e_sim.launch.py
+  ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5e
 
 To stop:
-  docker rm -f $CONTAINER_NAME
+  ./stop_ros_mac.sh
 EOF

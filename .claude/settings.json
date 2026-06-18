@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -lc \"ros2 pkg list | grep ur_simulation\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -lc \"source /opt/ros/jazzy/setup.bash && ros2 pkg list | grep ur_simulation\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -lc \"ps aux | grep -E 'ros2|rviz|gazebo|gzserver|gzclient' | grep -v grep\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -lc \"echo DISPLAY=$DISPLAY && vncserver -list 2>/dev/null || true\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -lc \"pkill -f 'ros2 launch' || true; pkill -f gzserver || true; pkill -f rviz2 || true; sleep 1; echo 'Cleaned up'\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"pkill -f 'ros2 launch' 2>/dev/null; pkill -f gzserver 2>/dev/null; pkill -f rviz2 2>/dev/null; echo done\")",
+      "PowerShell(docker exec -d rdkdc_ros2_jazzy bash -c \"export DISPLAY=:1 && source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5e launch_rviz:=true gazebo_gui:=false > /tmp/rdkdc_launch.log 2>&1\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"cat /tmp/rdkdc_launch.log 2>/dev/null | head -40\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && timeout 60 bash -c 'until ros2 node list 2>/dev/null | grep -q controller_manager; do sleep 2; done; echo ready'\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 node list && echo '---' && ros2 control list_controllers 2>/dev/null || echo 'controllers not listed yet'\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && export ROS_DOMAIN_ID=0 && ros2 control list_controllers\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 control list_controllers\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 topic echo /joint_states --once 2>/dev/null | head -20\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"ps aux | grep -E 'rviz2|scaled_joint' | grep -v grep\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 service list | grep controller_manager | head -10\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 service call /controller_manager/list_controllers controller_manager_msgs/srv/ListControllers '{}' 2>/dev/null | grep -E 'name|state'\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 service call /controller_manager/configure_controller controller_manager_msgs/srv/ConfigureController '{name: scaled_joint_trajectory_controller}'\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && ros2 service call /controller_manager/switch_controller controller_manager_msgs/srv/SwitchController '{activate_controllers: [scaled_joint_trajectory_controller], deactivate_controllers: [], strictness: 2, activate_asap: true, timeout: {sec: 10, nanosec: 0}}'\")",
+      "PowerShell(docker exec -d rdkdc_ros2_jazzy bash -c \"export DISPLAY=:1 && source /opt/ros/jazzy/setup.bash && source /root/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0 && rviz2 -d /root/ros2_ws/install/rdkdc_setup/share/rdkdc_setup/rviz/ur_frames.rviz > /tmp/rviz2.log 2>&1\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"ps aux | grep rviz2 | grep -v grep | head -3\")",
+      "PowerShell(Invoke-WebRequest -Uri \"http://127.0.0.1:8765/health\" -UseBasicParsing)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://127.0.0.1:8765/joint_states\" -UseBasicParsing)",
+      "PowerShell($candidates = Get-ChildItem \"C:\\\\Program Files\\\\MATLAB\" -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | ForEach-Object { Join-Path $_.FullName \"bin\\\\matlab.exe\" }; $matlab = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1; if \\($matlab\\) { $matlab } else { \"MATLAB not found\" })",
+      "PowerShell($testScript = \"d:\\\\ros2_jazzy_vnc\\\\ros2_jazzy_vnc\\\\test.m\"; $matlabDir = Join-Path $env:USERPROFILE \"ros2_ws\\\\matlab\"; & \"C:\\\\Program Files\\\\MATLAB\\\\R2024b\\\\bin\\\\matlab.exe\" -batch \"setenv\\('RDKDC_BRIDGE_URL','http://127.0.0.1:8765'\\); addpath\\('$\\($matlabDir.Replace\\('\\\\','/'\\)\\)'\\); run\\('$\\($testScript.Replace\\('\\\\','/'\\)\\)'\\)\")",
+      "PowerShell(docker exec rdkdc_ros2_jazzy bash -c \"grep -q 'rdkdc_setup' /root/.bashrc || printf '\\\\n# RDKDC workspace\\\\nsource /root/ros2_ws/install/setup.bash\\\\nexport DISPLAY=:1\\\\n' >> /root/.bashrc && echo 'Profile updated' && tail -5 /root/.bashrc\")"
+    ]
+  }
+}

@@ -36,6 +36,7 @@ exec startxfce4\n' > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
 
 RUN sed -i 's/<title>.*<\/title>/<title>ROS 2 Jazzy Desktop<\/title>/g' /usr/share/novnc/vnc.html || true && \
-    sed -i 's/<title>.*<\/title>/<title>ROS 2 Jazzy Desktop<\/title>/g' /usr/share/novnc/vnc_lite.html || true
+    sed -i 's/<title>.*<\/title>/<title>ROS 2 Jazzy Desktop<\/title>/g' /usr/share/novnc/vnc_lite.html || true && \
+    find /usr/share/novnc/app/locale -name '*.json' -delete || true
 
 CMD ["bash", "-lc", "rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -geometry ${VNC_GEOMETRY:-1920x1080} -depth 24 -SecurityTypes None -localhost yes && websockify --web=/usr/share/novnc/ 6080 localhost:5901"]

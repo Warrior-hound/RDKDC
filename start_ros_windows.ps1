@@ -19,7 +19,7 @@ $WorkspaceSrc = Join-Path $Workspace "src"
 $BridgeDir = Join-Path $Workspace "rdkdc_bridge"
 $MatlabDir = Join-Path $Workspace "matlab"
 $SetupPkgDir = Join-Path $WorkspaceSrc "rdkdc_setup"
-$VncUrl = "http://${HostAddress}:${VncPort}/vnc_lite.html?autoconnect=true&resize=remote&quality=9&compression=0"
+$VncUrl = "http://${HostAddress}:${VncPort}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=0"
 $BridgeUrl = "http://${HostAddress}:${BridgePort}"
 
 function Resolve-Docker {
@@ -766,7 +766,7 @@ try {
     Add-Type -AssemblyName System.Windows.Forms
     $WorkingArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
     $Width = [int]$WorkingArea.Width
-    $Height = [int]$WorkingArea.Height
+    $Height = [Math]::Max(720, [int]$WorkingArea.Height - 140)
 }
 catch {
     Write-Warning "Could not detect screen size; using ${Width}x${Height}."
@@ -803,6 +803,9 @@ if (-not (Test-HttpReady -Uri "${BridgeUrl}/health" -TimeoutSeconds 45)) {
 Write-Host "Building RDKDC launch package in /root/ros2_ws..."
 & $Docker exec $ContainerName bash -lc "source /opt/ros/jazzy/setup.bash && cd /root/ros2_ws && colcon build --packages-select rdkdc_setup --symlink-install"
 
+Write-Host "Updating container shell profile..."
+& $Docker exec $ContainerName bash -c "grep -q 'rdkdc_setup' /root/.bashrc || printf '\n# RDKDC workspace\nsource /root/ros2_ws/install/setup.bash\nexport DISPLAY=:1\n' >> /root/.bashrc"
+
 [Environment]::SetEnvironmentVariable("RDKDC_BRIDGE_URL", $BridgeUrl, "User")
 $env:RDKDC_BRIDGE_URL = $BridgeUrl
 
@@ -819,18 +822,9 @@ Start-Process $VncUrl
 Write-Host ""
 Write-Host "RDKDC ROS 2 Jazzy desktop is ready."
 Write-Host "VNC/RViz desktop: $VncUrl"
-Write-Host "HTTP bridge: $BridgeUrl"
-Write-Host "Host workspace: $Workspace"
-Write-Host "Container workspace: /root/ros2_ws"
-Write-Host ""
-Write-Host "In MATLAB, run:"
-Write-Host "  addpath('$MatlabDir')"
-Write-Host "  setenv('RDKDC_BRIDGE_URL','$BridgeUrl')"
-Write-Host "  ur5e = ur5_interface();"
 Write-Host ""
 Write-Host "Inside the Docker/VNC terminal, launch UR5e/RViz with:"
-Write-Host "  source /root/ros2_ws/install/setup.bash"
-Write-Host "  ros2 launch rdkdc_setup ur5e_sim.launch.py"
+Write-Host "  ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5e"
 Write-Host ""
 Write-Host "To stop:"
-Write-Host "  docker rm -f $ContainerName"
+Write-Host "  .\stop_ros_windows.ps1"
