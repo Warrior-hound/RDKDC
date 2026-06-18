@@ -1,0 +1,196 @@
+\documentclass[hidelinks]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+\usepackage{amsmath} 
+\usepackage{graphicx}
+\usepackage{enumitem}
+\graphicspath{ {images/} }
+\setlength{\parindent}{0pt}
+\usepackage[section]{placeins}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{fancyvrb}
+\usepackage{listings}
+\usepackage{float}
+
+\renewcommand\thesubsection{\arabic{subsection}}
+\textwidth = 6.5 in \textheight = 9 in \oddsidemargin = 0.0 in
+\evensidemargin = 0.0 in \topmargin = 0.0 in \headheight = 0.0 in
+\headsep = 0.0 in
+%\parskip = 0.2in
+\parindent = 0.0in
+
+\title{EN.530.646 \\
+Robot Devices, Kinematics, Dynamic and Control \\Lab 0 Instructions}
+\author{Jin Seob Kim, Ph.D.\\
+Senior Lecturer, ME Dept., LCSR, JHU}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-0.1in}
+\begin{center}
+\noindent
+\framebox[\textwidth][c]{
+    \parbox{0.95\textwidth}{
+        \emph{This is exclusively used for Fall 2025 EN.530.646 RDKDC students and is not to be posted, shared, or otherwise distributed.}}}
+\end{center}
+
+The labs for RDKDC are built on the Robot Operating System (ROS), which runs on Linux. If you're new to Linux, there are many excellent tutorials available online to help you get started — including \href{https://linuxjourney.com}{\color{blue}this one} and \href{https://www.guru99.com/linux-commands-cheat-sheet.html}{\color{blue}this one}.
+
+\vspace{0.1in}
+The “Accessing course content via GitHub” section explains how to download lab starter code and updates. Before beginning lab work, you will get familiar with the two types of robots we will be using in this course -- UR5 or UR5e -- and you need to get familiar with both MATLAB or Python. These affect how your environment should be configured. See the “UR5 vs. UR5e” and “MATLAB vs. Python” sections for guidance.
+
+\vspace{0.1in}
+To set up the lab environment on your personal computer, follow the steps in “Choice 1: Working on PC”, which covers installing Ubuntu and ROS2. If you prefer not to install Linux on your own laptop, 12 pre-configured workstations are available in Wyman 170. You can log into these machines with your JHED credentials. See the “Working on Wyman Computers” section for setup instructions.
+
+\vspace{0.1in}
+Once your environment is configured, follow the “Verify Installation” section to ensure everything is working correctly before starting the labs.
+
+\section*{Accessing Course Content via GitHub}
+\addcontentsline{toc}{section}{Accessing course content via GitHub}
+
+We use GitHub to distribute course materials. The repository is private and only accessible to students enrolled in this class. To gain access, please fill out \href{https://docs.google.com/forms/d/13va2CeKDCR6VveB_4l6r5Z6sduOZegped-RVWqcanms/edit}{\color{blue}this Google form} with:
+\begin{itemize}[noitemsep]
+    \item Your full name
+    \item Your JHED ID
+    \item The email associated with your GitHub account
+\end{itemize}
+
+Within 48 hours of submitting the form, you should receive an invitation to join the \texttt{jhu-rdkdc} organization.
+Once you're added to the organization, you'll be able to access the course repository under \verb+robo646-fa25-public+. For now, you should only be able to see the \verb+Lab0/+ starter code. Homework starter code (if any) will be made visible as each assignment is released. If you do not receive the invitation within 48 hours, please contact the instructors via email.
+
+\vspace{0.1in}
+Specifically, you will need a Personal Access Token (PAT) to be able to pull the course content from the course GitHub. This is used instead of your password when pulling and pushing for greater security. For more detailed instructions and walk-throughs, see figures in the repo \verb+README.md+.
+
+\section*{UR5 vs. UR5e}
+\addcontentsline{toc}{section}{UR5 vs. UR5e}
+
+In Wyman 170, we have two types of collaborative robotic arms: the \textbf{UR5} and \textbf{UR5e}. While they are similar in appearance and commonly grouped under the “UR5” name, they are in fact distinct models. Both robots have six joints, giving them six degrees of freedom—that is, six independent ways they can move (such as rotating the base, moving the arm up and down, bending the wrist, etc.). This flexibility allows the robot to position its end effector (e.g., a gripper) precisely in 3D space. You can read more about their technical specs in \href{https://www.rarukautomation.com/collaborative-robots/ur-6-axis-collaborative-robots/ur5-robot/}{\color{blue}this link}.
+
+\vspace{0.1in}
+In this course, you have the chance to work with both UR5 and UR5e, and we will help you set up your lab environment that works for both models.
+
+\vspace{0.1in}
+\textbf{Important: }Although the robots may look alike, there are subtle differences in their \textbf{kinematics} (i.e., the mathematical model of how they move) and their \textbf{launch configurations}. As a result, code written for one robot \textbf{cannot} be directly used for the other. The course is designed to first teach you how to simulate the robot (UR5 or UR5e), and then how to control the actual hardware in the lab.
+
+\section*{Your Coding Language: MATLAB and Python}
+\addcontentsline{toc}{section}{MATLAB vs. Python}
+
+Starting in Fall 2025, we are providing starter code in both MATLAB and Python, giving you the flexibility to complete assignments in the language of your choice.
+
+\vspace{0.1in}
+Historically, MATLAB has been widely used in academia and research—especially for numerical computation, control systems, and robotics due to its powerful built-in toolboxes and ease of matrix manipulation. It’s also the language of choice for many robotics textbooks and simulations in educational settings.
+
+\vspace{0.1in}
+However, in recent years, Python has gained significant popularity in both academia and industry. To better prepare students for both research and industry applications, we are officially supporting Python in this course alongside MATLAB. You may use both languages for your lab assignments.
+
+%\vspace{0.1in}
+%Feel free to switch between them during the first few labs, but we recommend settling on one language for consistency as the course progresses.
+
+\subsection*{A. Installing Python}
+If you are using Ubuntu 22.04 LTS, then you already have Python 3.10 installed as default. Otherwise, ensure that the version is \textbf{3.7 or higher} by typing \verb+python3 --version+. Otherwise, follow the steps below to install the appropriate version:
+\begin{Verbatim}
+    $ sudo apt-get update
+    $ sudo apt-get install python3.10
+\end{Verbatim}
+
+\subsection*{B. Installing MATLAB}
+When installing MATLAB, make sure to select \texttt{ROS Toolbox} and \texttt{Robotics System Toolbox}. During installation, check the box to create \verb+symbolic links+. This allows you to launch MATLAB from the terminal by typing \texttt{matlab}. Be sure to enter your exact Linux username during installation. Otherwise, you may encounter license issues. If you do run into license-related errors, refer to \href{https://stackoverflow.com/questions/62194208/activating-matlab-error-license-checkout-failed-license-manager-error-9}{\color{blue}{this}} helpful Stack Overflow post for troubleshooting.
+
+
+\section*{Working on Personal Computer}
+\addcontentsline{toc}{section}{Choice 1: Working on PC}
+
+\subsection{Install Linux}
+We use \href{http://releases.ubuntu.com/jammy/}{\color{blue}{Ubuntu 22.04}} for this course. There are several options for using Linux. One is to install Linux as the main OS of your computer. Another option is to dual-boot your computer. For the dual-boot setup on Windows, see \href{https://youtube.com/watch?v=OU\_dkeFprhY\&feature=share}{\color{blue}this video}. To install Linux, you need to prepare a bootable USB. Here is how to do this on \href{https://ubuntu.com/tutorials/create-a-usb-stick-on-windows}{\color{blue}Windows} and \href{https://ubuntu.com/tutorials/create-a-usb-stick-on-macos}{\color{blue}Mac}.
+Other useful information can be found in \href{https://phoenixnap.com/kb/ubuntu-22-04-lts}{\color{blue}this link}.
+
+\vspace{0.1in}
+
+% instructions in the link above have details for rufus and rufus alternatives
+Note that to make a Bootable USB on Windows, you will need to install \href{https://rufus.ie/en/}{\color{blue}\texttt{Rufus}}, whereas on Mac, \href{https://etcher.balena.io/}{\color{blue}Etcher} is recommended.
+%Note that on Windows, you need \texttt{Rufus} to make a bootable USB (you can google to install \texttt{Rufus}). For Mac systems, you need to find alternatives (see \href{https://www.uubyte.com/rufus-for-mac.html}{\color{blue}here} for details). 
+If necessary, you might need to turn off BitLocker (see \href{https://answers.microsoft.com/en-us/windows/forum/all/no-option-to-turn-off-bitlocker-in-windows-10-home/a929de9f-f73e-46bc-854d-a5b1bd332c04}{\color{blue}{here}}).
+
+\vspace{0.1in}
+
+Then follow the instructions to \href{https://www.ubuntu.com/download/desktop/install-ubuntu-desktop}{\color{blue}{install Ubuntu}}. 
+
+\vspace{0.1in}
+
+\textbf{NOTE:} \emph{Don't forget to look up your computer model.} The process may depend on the machine model.
+An example, dual boot for a Dell XPS 15 model is found \href{https://gist.github.com/estherjk/86381ab10c0bb3a1a9046f7f64b6d1df}{\color{blue} here}.
+
+\vspace{0.1in}
+
+If you are already using an older version of Ubuntu, you can upgrade by following \href{https://ubuntu.com/server/docs/upgrade-introduction}{\color{blue}this link}. If you opt to upgrade, you may need to uninstall ROS first before upgrading the Ubuntu system. You will see messages on the screen for this. See the \href{https://answers.ros.org/question/57213/how-i-completely-remove-all-ros-from-my-system/}{\color{blue}following link}. You may also get an issue with dpkg returning an error, see \href{https://phoenixnap.com/kb/fix-sub-process-usr-bin-dpkg-returned-error-code-1}{\color{blue}here} for troubleshooting steps. Recently, there is a personal version of VMware Fusion, which is for Mac OS systems.
+
+\vspace{0.1in}
+
+Alternatively, you can use a virtual machine such as Parallels, VMware, or VirtualBox. Note that virtual machines can only be used for simulation and cannot be used for controlling the robot later in the course. If using VirtualBox, you may run into an issue where your user account is not given SUDO privilege. If this is the case follow the instructions in \href{https://superuser.com/a/1755286}{\color{blue}this link} to fix.
+
+\vspace{0.1in}
+
+Lastly, Windows Subsystem for Linux (\href{https://learn.microsoft.com/en-us/windows/wsl/}{\color{blue} WSL}) is a good option for Windows users that achieves better performance than virtual machines while not requiring rebooting (like dual boots) to access Linux. Ubuntu comes as the default for this. See instructions \href{https://learn.microsoft.com/en-us/windows/wsl/install}{\color{blue} here}.
+
+\subsection{Install ROS2 and Necessary Packages}
+In order to install ROS2 and the necessary packages please follow one of the options below. Option A is recommended, but if you encounter any issues or already have ROS2 Humble installed try Option B. 
+
+\vspace{0.1in}
+
+% Note that before following the instructions, if you have never used your LCSR git account, you must log on to \texttt{git.lcsr.jhu.edu} with your JHED ID to initialize it. When you do the git clone, the username is your JHED ID without the suffix.
+
+\subsubsection*{A. Install ROS2 and Necessary Packages with a Single Shell Script}
+You will install with `\texttt{rdkdc\char`_laptop\char`_with\char`_ros.sh}' file in your  \verb+Lab0/+ folder. Open a new terminal, navigate to the folder that contains this shell script, and run the following lines:
+\begin{Verbatim}
+	$ sudo chmod 755 rdkdc_laptop_with_ros.sh
+	$ sudo ./rdkdc_laptop_with_ros.sh
+\end{Verbatim}
+
+\subsubsection*{B. Install ROS 2 and Necessary Packages Separately}
+Follow the \href{https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html}{\color{blue}{instructions}} to install ROS Humble. Be sure to install the ``Desktop" version and not the ``ROS-Base" version. Also, be sure to install the ``Development Tools".\\
+
+You will install with `\texttt{rdkdc\char`_laptop.sh}' file in your  \verb+Lab0/+ folder. Open a new terminal, navigate to the folder that contains this shell script, and run the following lines.
+\begin{Verbatim}
+	$ sudo chmod 755 rdkdc_laptop.sh
+	$ sudo ./rdkdc_laptop.sh
+\end{Verbatim}
+
+When prompted, you will use your Github ID as your username and your Github token as your password. It is now successfully installed!
+
+\section*{Working on Wyman Computers}
+\addcontentsline{toc}{section}{Choice 2: Working on Wyman computers}
+
+This section provides instruction on setting up your work environment if you decide to work in Wyman 170.
+
+\setcounter{subsection}{0}
+\subsection{Install ROS2 Packages}
+Download `\texttt{rdkdc\char`_wyman.sh}' file (it is included in the zip file) from the canvas, Lab0 module. Open a new terminal, go to the folder that contains the shell script, and follow the steps to install supporting ROS packages for this course.
+\begin{Verbatim}
+	$ chmod 755 rdkdc_wyman.sh
+	$ ./rdkdc_wyman.sh
+\end{Verbatim}
+When prompted, you will use your Github ID as your username and your newly generated personal access token as your password. You have successfully installed it!
+
+\section*{Verify Installation}
+\addcontentsline{toc}{section}{Verify installation}
+
+Open a new terminal. Type ``\verb+ros2 launch rdkdc <ur5/ur5e>_simulation.launch.py+". You should see something like Figure \ref{fig:correct_setup}.
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width = 0.9\linewidth]{InitConf_RViz_Ros2_ur5e.png}
+    \caption{Simulation Window}
+    \label{fig:correct_setup}
+\end{figure}
+
+%========
+\begin{thebibliography}{9}
+\bibitem{FischerRAM2021}
+Tobias Fischer, Wolf Vollprecht, Silvio Traversaro, Sean Yen, Carlos Herrero, and Michael Milford. A RoboStack Tutorial: Using the Robot Operating System Alongside the Conda and Jupyter Data Science Ecosystems, \emph{IEEE Robotics and Automation Magazine}, doi:10.1109/MRA.2021.3128367, 2021.
+\end{thebibliography}
+
+\end{document}
+

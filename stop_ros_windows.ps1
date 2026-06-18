@@ -1,4 +1,5 @@
-$ContainerName = "ros2_jazzy_vnc"
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
 
 function Resolve-Docker {
     $DockerCommand = Get-Command docker -ErrorAction SilentlyContinue
@@ -11,16 +12,12 @@ function Resolve-Docker {
         return $DockerDesktopPath
     }
 
-    Write-Error "Docker was not found. Install Docker Desktop for Windows, start it, then reopen PowerShell so docker.exe is on PATH."
-    exit 1
+    throw "Docker was not found. Install Docker Desktop for Windows, start it, then reopen PowerShell."
 }
 
 $Docker = Resolve-Docker
+$ContainerName = "rdkdc_ros2_jazzy"
 
-$ExistingContainers = & $Docker ps -a --format "{{.Names}}"
-if ($ExistingContainers -contains $ContainerName) {
-    & $Docker stop $ContainerName | Out-Null
-    & $Docker rm $ContainerName | Out-Null
-}
+& $Docker rm -f $ContainerName *> $null
 
-Write-Host "ROS 2 Jazzy desktop stopped."
+Write-Host "RDKDC ROS 2 Jazzy Docker container stopped."

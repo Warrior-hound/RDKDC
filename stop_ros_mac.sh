@@ -1,8 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-CONTAINER_NAME="ros2_jazzy_vnc"
+set -euo pipefail
 
-docker stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
-docker rm "$CONTAINER_NAME" >/dev/null 2>&1 || true
+docker rm -f rdkdc_ros2_jazzy >/dev/null 2>&1 || true
 
-echo "ROS 2 Jazzy desktop stopped."
+echo "RDKDC ROS 2 Jazzy Docker container stopped."

@@ -1,0 +1,244 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{xcolor}
+
+\setlength{\parindent}{0pt}
+\setlist[itemize]{noitemsep, topsep=2pt}
+\setlist[enumerate]{noitemsep, topsep=2pt}
+
+\title{RDKDC ROS 2 Jazzy Docker Setup}
+\author{EN.530.646 Robot Devices, Kinematics, Dynamic and Control}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Meeting Notes}
+
+\begin{enumerate}
+    \item We moved the course setup toward ROS 2 Jazzy in Docker so students do not need to install Ubuntu or ROS directly on their laptops.
+    \item We found that host MATLAB does not reliably communicate with ROS 2 inside Docker Desktop through raw DDS networking on Windows. To make the setup robust, MATLAB talks to a local HTTP bridge, and the bridge talks to ROS 2 inside Docker.
+    \item We verified the full prototype on Windows: Docker/VNC started, the bridge worked, a ROS 2 launch flow brought up UR5e/RViz/controllers, and MATLAB called \texttt{ur5\_interface()} to move the simulated UR5e to a test pose and return it home.
+\end{enumerate}
+
+\section*{What Students Install}
+
+Students install only the following:
+
+\begin{itemize}
+    \item Docker Desktop
+    \item MATLAB
+    \item MATLAB ROS Toolbox
+    \item MATLAB Robotics System Toolbox
+    \item The course repository
+\end{itemize}
+
+Students do not install Ubuntu, ROS 2, Gazebo, RViz, or Universal Robots packages directly on the host machine. Those are provided inside Docker.
+
+\section*{How The Setup Works}
+
+The runtime layout is:
+
+\begin{Verbatim}
+MATLAB on Windows/macOS
+    -> http://127.0.0.1:8765
+    -> RDKDC HTTP bridge inside Docker
+    -> ROS 2 Jazzy, RViz, Gazebo, UR5e simulation inside Docker
+\end{Verbatim}
+
+The bridge is necessary because Docker Desktop networking can block or confuse normal ROS 2 DDS discovery between host MATLAB and the Linux container.
+
+\section*{Generated Files}
+
+The start script creates or updates these files automatically.
+
+On Windows:
+
+\begin{Verbatim}
+C:\Users\<student>\ros2_ws\rdkdc_bridge\rdkdc_http_bridge.py
+C:\Users\<student>\ros2_ws\matlab\ur5_interface.m
+C:\Users\<student>\ros2_ws\matlab\ur5e_interface.m
+C:\Users\<student>\ros2_ws\matlab\tf_frame.m
+C:\Users\<student>\ros2_ws\src\rdkdc_setup\launch\ur5e_sim.launch.py
+\end{Verbatim}
+
+On macOS:
+
+\begin{Verbatim}
+~/ros2_ws/rdkdc_bridge/rdkdc_http_bridge.py
+~/ros2_ws/matlab/ur5_interface.m
+~/ros2_ws/matlab/ur5e_interface.m
+~/ros2_ws/matlab/tf_frame.m
+~/ros2_ws/src/rdkdc_setup/launch/ur5e_sim.launch.py
+\end{Verbatim}
+
+If \texttt{ros2\_ws} already exists, the setup does not delete the workspace. It creates the needed folders if missing and overwrites only the generated bridge/helper/setup files listed above.
+
+\section*{Windows Setup}
+
+Open PowerShell in the course repository folder and run:
+
+\begin{Verbatim}
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\build_ros_windows.ps1
+.\start_ros_windows.ps1
+\end{Verbatim}
+
+The build script builds the Docker image. The start script starts Docker, mounts the student's local workspace into Docker, starts noVNC, starts the MATLAB bridge, and builds the generated ROS 2 launch package.
+
+The workspace mount is:
+
+\begin{Verbatim}
+Host:      C:\Users\<student>\ros2_ws
+Docker:    /root/ros2_ws
+\end{Verbatim}
+
+Any files edited under the host \texttt{ros2\_ws} are immediately visible inside Docker at \texttt{/root/ros2\_ws}.
+
+The start script will:
+
+\begin{enumerate}
+    \item Start the Docker container.
+    \item Start noVNC at \url{http://127.0.0.1:6080}.
+    \item Start the RDKDC HTTP bridge at \url{http://127.0.0.1:8765}.
+    \item Generate and build the \texttt{rdkdc\_setup} ROS 2 launch package in \texttt{/root/ros2\_ws}.
+    \item Run a MATLAB bridge smoke test if MATLAB is found.
+\end{enumerate}
+
+To stop:
+
+\begin{Verbatim}
+.\stop_ros_windows.ps1
+\end{Verbatim}
+
+\section*{macOS Setup}
+
+Open Terminal in the course repository folder and run:
+
+\begin{Verbatim}
+chmod +x build_ros_mac.sh start_ros_mac.sh stop_ros_mac.sh
+./build_ros_mac.sh
+./start_ros_mac.sh
+\end{Verbatim}
+
+The workspace mount is:
+
+\begin{Verbatim}
+Host:      ~/ros2_ws
+Docker:    /root/ros2_ws
+\end{Verbatim}
+
+Any files edited under the host \texttt{ros2\_ws} are immediately visible inside Docker at \texttt{/root/ros2\_ws}.
+
+To stop:
+
+\begin{Verbatim}
+./stop_ros_mac.sh
+\end{Verbatim}
+
+\section*{Launching UR5e and RViz}
+
+After the start script finishes, open the browser VNC desktop. In the Linux terminal inside the Docker/VNC desktop, run:
+
+\begin{Verbatim}
+source /root/ros2_ws/install/setup.bash
+ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5e
+\end{Verbatim}
+
+This launch file starts the UR5e simulation, starts RViz, and activates the controllers needed by \texttt{ur5\_interface()}.
+
+Useful options:
+
+\begin{Verbatim}
+ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5e
+ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5
+ros2 launch rdkdc_setup ur5e_sim.launch.py launch_rviz:=false
+ros2 launch rdkdc_setup ur5e_sim.launch.py gazebo_gui:=true
+\end{Verbatim}
+
+\section*{Student MATLAB Workflow}
+
+After setup finishes and the launch file is running inside Docker, students should write normal MATLAB lab code. They should not need to write bridge setup code in each assignment.
+
+Example:
+
+\begin{Verbatim}
+ur5e = ur5_interface();
+
+q = [0.40; -1.20; 0.80; -1.90; 0.30; 0.20];
+ur5e.move_joints(q, 4);
+pause(5);
+
+ur5e.move_joints(ur5e.home, 4);
+\end{Verbatim}
+
+If MATLAB cannot find \texttt{ur5\_interface}, add the generated MATLAB folder once:
+
+Windows:
+\begin{Verbatim}
+addpath('C:\Users\<student>\ros2_ws\matlab')
+\end{Verbatim}
+
+macOS:
+\begin{Verbatim}
+addpath('~/ros2_ws/matlab')
+\end{Verbatim}
+
+\section*{Verify The Setup}
+
+The browser should open:
+
+\begin{Verbatim}
+http://127.0.0.1:6080/vnc_lite.html?autoconnect=true&resize=remote
+\end{Verbatim}
+
+Inside the VNC desktop, RViz should show the UR5e after running \texttt{ros2 launch rdkdc\_setup ur5e\_sim.launch.py}. In MATLAB, a simple motion test should move the simulated robot:
+
+\begin{Verbatim}
+ur5e = ur5_interface();
+disp(ur5e.get_current_joints().')
+ur5e.move_joints([0.40; -1.20; 0.80; -1.90; 0.30; 0.20], 4);
+pause(5);
+disp(ur5e.get_current_joints().')
+ur5e.move_joints(ur5e.home, 4);
+\end{Verbatim}
+
+\section*{Ports}
+
+The setup uses these local ports:
+
+\begin{itemize}
+    \item \texttt{6080}: browser VNC
+    \item \texttt{5901}: native VNC
+    \item \texttt{8765}: MATLAB HTTP bridge
+    \item \texttt{11811/udp}: Fast DDS discovery port, kept available for diagnostics
+\end{itemize}
+
+The scripts remove old course containers that commonly hold these ports. If an unrelated application is already using one of these ports, Docker will report a port binding error. Close the application or ask a TA to help identify the process.
+
+\section*{Stopping The Environment}
+
+Windows PowerShell:
+
+\begin{Verbatim}
+.\stop_ros_windows.ps1
+\end{Verbatim}
+
+macOS Terminal:
+
+\begin{Verbatim}
+./stop_ros_mac.sh
+\end{Verbatim}
+
+\section*{TA Notes}
+
+\begin{itemize}
+    \item Students should use the build/start/stop scripts for their OS. The start script prepares Docker, VNC, the bridge, and the launch package. Students then run \texttt{ros2 launch rdkdc\_setup ur5e\_sim.launch.py ur\_type:=ur5e} or \texttt{ur\_type:=ur5} inside Docker for simulation.
+    \item The bridge-backed MATLAB files are generated into the student's home workspace, not the course repo root.
+    \item Avoid shipping another \texttt{ur5\_interface.m} in the current MATLAB working directory unless it is the bridge-backed version, because MATLAB path precedence can load the wrong file.
+\end{itemize}
+
+\end{document}

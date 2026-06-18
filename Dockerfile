@@ -21,6 +21,10 @@ RUN apt-get update && apt-get install -y \
     libglu1-mesa \
     ros-jazzy-rviz2 \
     ros-jazzy-demo-nodes-cpp \
+    ros-jazzy-ur \
+    ros-jazzy-ur-simulation-gz \
+    ros-jazzy-joint-state-publisher-gui \
+    ros-jazzy-xacro \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /root/.vnc && \

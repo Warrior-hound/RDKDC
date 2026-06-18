@@ -12,34 +12,31 @@ function Resolve-Docker {
         return $DockerDesktopPath
     }
 
-    Write-Error "Docker was not found. Install Docker Desktop for Windows, start it, then reopen PowerShell so docker.exe is on PATH."
-    exit 1
+    throw "Docker was not found. Install Docker Desktop for Windows, start it, then reopen PowerShell."
+}
+
+function Get-DockerPlatform {
+    $Arch = if ($env:PROCESSOR_ARCHITEW6432) {
+        $env:PROCESSOR_ARCHITEW6432
+    }
+    else {
+        $env:PROCESSOR_ARCHITECTURE
+    }
+
+    switch ($Arch) {
+        "ARM64" { return "linux/arm64" }
+        "AMD64" { return "linux/amd64" }
+        default { throw "Unsupported Windows architecture: $Arch" }
+    }
 }
 
 $ImageName = "ros2-jazzy-vnc"
 $Docker = Resolve-Docker
+$Platform = Get-DockerPlatform
 
-$Arch = if ($env:PROCESSOR_ARCHITEW6432) {
-    $env:PROCESSOR_ARCHITEW6432
-}
-else {
-    $env:PROCESSOR_ARCHITECTURE
-}
+Write-Host "Detected Docker platform: $Platform"
+Write-Host "Building $ImageName..."
 
-switch ($Arch) {
-    "ARM64" { $Platform = "linux/arm64" }
-    "AMD64" { $Platform = "linux/amd64" }
-    default {
-        Write-Error "Unsupported Windows architecture: $Arch"
-        exit 1
-    }
-}
-
-Write-Host "Detected Windows architecture: $Arch"
-Write-Host "Using Docker platform: $Platform"
-
-& $Docker build `
-    --platform $Platform `
-    -t $ImageName .
+& $Docker build --platform $Platform -t $ImageName .
 
 Write-Host "Build complete."
