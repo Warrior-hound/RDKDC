@@ -533,37 +533,15 @@ PY
 
   cat > "$launch_dir/ur5e_sim.launch.py" <<'PY'
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
-from launch.conditions import IfCondition
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
-def controller_call(service_name, service_type, request):
-    return ExecuteProcess(
-        cmd=[
-            "bash",
-            "-lc",
-            (
-                "source /opt/ros/jazzy/setup.bash && "
-                "ros2 service call "
-                + service_name
-                + " "
-                + service_type
-                + " '"
-                + request
-                + "' || true"
-            ),
-        ],
-        output="screen",
-    )
-
-
 def generate_launch_description():
     ur_type = LaunchConfiguration("ur_type")
-    launch_rviz = LaunchConfiguration("launch_rviz")
     gazebo_gui = LaunchConfiguration("gazebo_gui")
 
     ur_sim = IncludeLaunchDescription(
@@ -581,6 +559,18 @@ def generate_launch_description():
         }.items(),
     )
 
+    activate_trajectory_controller = TimerAction(
+        period=10.0,
+        actions=[
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                arguments=["scaled_joint_trajectory_controller", "--controller-manager", "/controller_manager"],
+                output="screen",
+            ),
+        ],
+    )
+
     rviz = Node(
         package="rviz2",
         executable="rviz2",
@@ -591,42 +581,8 @@ def generate_launch_description():
                 [FindPackageShare("rdkdc_setup"), "rviz", "ur_frames.rviz"]
             ),
         ],
-        output="log",
-        condition=IfCondition(launch_rviz),
+        output="screen",
     )
-
-    activate_controllers = TimerAction(
-        period=30.0,
-        actions=[
-            controller_call(
-                "/controller_manager/load_controller",
-                "controller_manager_msgs/srv/LoadController",
-                "{name: joint_state_broadcaster}",
-            ),
-            controller_call(
-                "/controller_manager/load_controller",
-                "controller_manager_msgs/srv/LoadController",
-                "{name: scaled_joint_trajectory_controller}",
-            ),
-            controller_call(
-                "/controller_manager/configure_controller",
-                "controller_manager_msgs/srv/ConfigureController",
-                "{name: joint_state_broadcaster}",
-            ),
-            controller_call(
-                "/controller_manager/configure_controller",
-                "controller_manager_msgs/srv/ConfigureController",
-                "{name: scaled_joint_trajectory_controller}",
-            ),
-            controller_call(
-                "/controller_manager/switch_controller",
-                "controller_manager_msgs/srv/SwitchController",
-                "{activate_controllers: [joint_state_broadcaster, scaled_joint_trajectory_controller], deactivate_controllers: [], strictness: 2, activate_asap: true, timeout: {sec: 10, nanosec: 0}}",
-            ),
-        ],
-    )
-
-    start_rviz = TimerAction(period=35.0, actions=[rviz])
 
     return LaunchDescription(
         [
@@ -636,11 +592,10 @@ def generate_launch_description():
                 choices=["ur5", "ur5e"],
                 description="Robot model to simulate.",
             ),
-            DeclareLaunchArgument("launch_rviz", default_value="true"),
             DeclareLaunchArgument("gazebo_gui", default_value="false"),
             ur_sim,
-            activate_controllers,
-            start_rviz,
+            activate_trajectory_controller,
+            TimerAction(period=15.0, actions=[rviz]),
         ]
     )
 PY
@@ -753,6 +708,17 @@ fi
 
 write_bridge_files
 write_launch_package
+
+MATLAB_STARTUP_DIR="$HOME/Documents/MATLAB"
+MATLAB_STARTUP_FILE="$MATLAB_STARTUP_DIR/startup.m"
+mkdir -p "$MATLAB_STARTUP_DIR"
+if ! grep -q 'ros2_ws/matlab' "$MATLAB_STARTUP_FILE" 2>/dev/null; then
+  printf '\n%% RDKDC course setup\naddpath('"'"'%s'"'"');\n' "$MATLAB_DIR" >> "$MATLAB_STARTUP_FILE"
+  echo "Added RDKDC path to $MATLAB_STARTUP_FILE"
+else
+  echo "MATLAB startup.m already contains RDKDC path, skipping."
+fi
+
 echo "Workspace: $WORKSPACE"
 echo "Generated MATLAB bridge files: $MATLAB_DIR"
 echo "Generated ROS launch package: $SETUP_PKG_DIR"

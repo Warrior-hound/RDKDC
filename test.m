@@ -2,20 +2,6 @@
 % Runs local MATLAB code against the Docker HTTP bridge, which then commands
 % the UR5e ROS 2 controller inside the container.
 
-original_dir = pwd;
-bridge_url = "http://127.0.0.1:8765";
-matlab_bridge_dir = fullfile(getenv("USERPROFILE"), "ros2_ws", "matlab");
-
-cleanup = onCleanup(@() cd(original_dir));
-
-setenv("RDKDC_BRIDGE_URL", bridge_url);
-cd(matlab_bridge_dir);
-addpath(matlab_bridge_dir);
-
-disp("Checking RDKDC bridge...");
-health = webread(bridge_url + "/health", weboptions("Timeout", 5));
-disp(health);
-
 ur5e = ur5_interface();
 
 disp("Initial joints:");
