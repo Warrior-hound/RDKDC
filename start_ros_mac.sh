@@ -36,7 +36,7 @@ VNC_PORT="6080"
 VNC_NATIVE_PORT="5901"
 BRIDGE_PORT="8765"
 DISCOVERY_PORT="11811"
-WORKSPACE="$HOME/ros2_ws"
+WORKSPACE="$HOME/rdkdc_ws"
 WORKSPACE_SRC="$WORKSPACE/src"
 BRIDGE_DIR="$WORKSPACE/rdkdc_bridge"
 MATLAB_DIR="$WORKSPACE/matlab"
@@ -712,7 +712,7 @@ write_launch_package
 MATLAB_STARTUP_DIR="$HOME/Documents/MATLAB"
 MATLAB_STARTUP_FILE="$MATLAB_STARTUP_DIR/startup.m"
 mkdir -p "$MATLAB_STARTUP_DIR"
-if ! grep -q 'ros2_ws/matlab' "$MATLAB_STARTUP_FILE" 2>/dev/null; then
+if ! grep -q 'rdkdc_ws/matlab' "$MATLAB_STARTUP_FILE" 2>/dev/null; then
   printf '\n%% RDKDC course setup\naddpath('"'"'%s'"'"');\n' "$MATLAB_DIR" >> "$MATLAB_STARTUP_FILE"
   echo "Added RDKDC path to $MATLAB_STARTUP_FILE"
 else
@@ -759,7 +759,7 @@ echo "Starting container $CONTAINER_NAME..."
   -p "${HOST_ADDRESS}:${VNC_NATIVE_PORT}:5901" \
   -p "${HOST_ADDRESS}:${BRIDGE_PORT}:8765" \
   -p "${HOST_ADDRESS}:${DISCOVERY_PORT}:11811/udp" \
-  -v "${WORKSPACE}:/root/ros2_ws" \
+  -v "${WORKSPACE}:/root/rdkdc_ws" \
   "$IMAGE_NAME" >/dev/null
 
 if ! wait_for_http "http://${HOST_ADDRESS}:${VNC_PORT}" 90; then
@@ -769,7 +769,7 @@ if ! wait_for_http "http://${HOST_ADDRESS}:${VNC_PORT}" 90; then
 fi
 
 echo "Starting RDKDC HTTP bridge..."
-"$DOCKER" exec -d "$CONTAINER_NAME" bash -lc "source /opt/ros/jazzy/setup.bash && unset ROS_DISCOVERY_SERVER ROS_SUPER_CLIENT && export ROS_DOMAIN_ID=0 && python3 /root/ros2_ws/rdkdc_bridge/rdkdc_http_bridge.py > /tmp/rdkdc_bridge.log 2>&1"
+"$DOCKER" exec -d "$CONTAINER_NAME" bash -lc "source /opt/ros/jazzy/setup.bash && unset ROS_DISCOVERY_SERVER ROS_SUPER_CLIENT && export ROS_DOMAIN_ID=0 && python3 /root/rdkdc_ws/rdkdc_bridge/rdkdc_http_bridge.py > /tmp/rdkdc_bridge.log 2>&1"
 
 if ! wait_for_http "${BRIDGE_URL}/health" 45; then
   echo "Bridge log:"
@@ -778,11 +778,11 @@ if ! wait_for_http "${BRIDGE_URL}/health" 45; then
   exit 1
 fi
 
-echo "Building RDKDC launch package in /root/ros2_ws..."
-"$DOCKER" exec "$CONTAINER_NAME" bash -lc "source /opt/ros/jazzy/setup.bash && cd /root/ros2_ws && colcon build --packages-select rdkdc_setup --symlink-install"
+echo "Building RDKDC launch package in /root/rdkdc_ws..."
+"$DOCKER" exec "$CONTAINER_NAME" bash -lc "source /opt/ros/jazzy/setup.bash && cd /root/rdkdc_ws && colcon build --packages-select rdkdc_setup --symlink-install"
 
 echo "Updating container shell profile..."
-"$DOCKER" exec "$CONTAINER_NAME" bash -c "grep -q 'rdkdc_setup' /root/.bashrc || printf '\n# RDKDC workspace\nsource /root/ros2_ws/install/setup.bash\nexport DISPLAY=:1\n' >> /root/.bashrc"
+"$DOCKER" exec "$CONTAINER_NAME" bash -c "grep -q 'rdkdc_setup' /root/.bashrc || printf '\n# RDKDC workspace\nsource /root/rdkdc_ws/install/setup.bash\nexport DISPLAY=:1\n' >> /root/.bashrc"
 
 export RDKDC_BRIDGE_URL="$BRIDGE_URL"
 

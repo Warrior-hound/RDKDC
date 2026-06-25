@@ -14,7 +14,7 @@ $VncPort = 6080
 $VncNativePort = 5901
 $BridgePort = 8765
 $DiscoveryPort = 11811
-$Workspace = Join-Path $HOME "ros2_ws"
+$Workspace = Join-Path $HOME "rdkdc_ws"
 $WorkspaceSrc = Join-Path $Workspace "src"
 $BridgeDir = Join-Path $Workspace "rdkdc_bridge"
 $MatlabDir = Join-Path $Workspace "matlab"
@@ -690,7 +690,7 @@ $MatlabStartupDir = Join-Path $HOME "Documents\MATLAB"
 $MatlabStartupFile = Join-Path $MatlabStartupDir "startup.m"
 New-Item -ItemType Directory -Force -Path $MatlabStartupDir | Out-Null
 $MatlabDirFwd = $MatlabDir.Replace('\', '/')
-if (-not (Test-Path $MatlabStartupFile) -or -not (Select-String -Path $MatlabStartupFile -Pattern 'ros2_ws.matlab' -Quiet)) {
+if (-not (Test-Path $MatlabStartupFile) -or -not (Select-String -Path $MatlabStartupFile -Pattern 'rdkdc_ws.matlab' -Quiet)) {
     Add-Content -Path $MatlabStartupFile -Value "`n% RDKDC course setup`naddpath('$MatlabDirFwd');"
     Write-Host "Added RDKDC path to $MatlabStartupFile"
 }
@@ -751,7 +751,7 @@ Write-Host "Starting container $ContainerName..."
     -p "${HostAddress}:${VncNativePort}:5901" `
     -p "${HostAddress}:${BridgePort}:8765" `
     -p "${HostAddress}:${DiscoveryPort}:11811/udp" `
-    -v "${Workspace}:/root/ros2_ws" `
+    -v "${Workspace}:/root/rdkdc_ws" `
     $ImageName | Out-Null
 
 if (-not (Test-HttpReady -Uri "http://${HostAddress}:${VncPort}" -TimeoutSeconds 90)) {
@@ -760,7 +760,7 @@ if (-not (Test-HttpReady -Uri "http://${HostAddress}:${VncPort}" -TimeoutSeconds
 }
 
 Write-Host "Starting RDKDC HTTP bridge..."
-& $Docker exec -d $ContainerName bash -lc "source /opt/ros/jazzy/setup.bash && unset ROS_DISCOVERY_SERVER ROS_SUPER_CLIENT && export ROS_DOMAIN_ID=0 && python3 /root/ros2_ws/rdkdc_bridge/rdkdc_http_bridge.py > /tmp/rdkdc_bridge.log 2>&1"
+& $Docker exec -d $ContainerName bash -lc "source /opt/ros/jazzy/setup.bash && unset ROS_DISCOVERY_SERVER ROS_SUPER_CLIENT && export ROS_DOMAIN_ID=0 && python3 /root/rdkdc_ws/rdkdc_bridge/rdkdc_http_bridge.py > /tmp/rdkdc_bridge.log 2>&1"
 
 if (-not (Test-HttpReady -Uri "${BridgeUrl}/health" -TimeoutSeconds 45)) {
     Write-Host "Bridge log:"
@@ -768,11 +768,11 @@ if (-not (Test-HttpReady -Uri "${BridgeUrl}/health" -TimeoutSeconds 45)) {
     throw "RDKDC HTTP bridge did not become ready on ${BridgeUrl}/health"
 }
 
-Write-Host "Building RDKDC launch package in /root/ros2_ws..."
-& $Docker exec $ContainerName bash -lc "source /opt/ros/jazzy/setup.bash && cd /root/ros2_ws && colcon build --packages-select rdkdc_setup --symlink-install"
+Write-Host "Building RDKDC launch package in /root/rdkdc_ws..."
+& $Docker exec $ContainerName bash -lc "source /opt/ros/jazzy/setup.bash && cd /root/rdkdc_ws && colcon build --packages-select rdkdc_setup --symlink-install"
 
 Write-Host "Updating container shell profile..."
-& $Docker exec $ContainerName bash -c "grep -q 'rdkdc_setup' /root/.bashrc || printf '\n# RDKDC workspace\nsource /root/ros2_ws/install/setup.bash\nexport DISPLAY=:1\n' >> /root/.bashrc"
+& $Docker exec $ContainerName bash -c "grep -q 'rdkdc_setup' /root/.bashrc || printf '\n# RDKDC workspace\nsource /root/rdkdc_ws/install/setup.bash\nexport DISPLAY=:1\n' >> /root/.bashrc"
 
 [Environment]::SetEnvironmentVariable("RDKDC_BRIDGE_URL", $BridgeUrl, "User")
 $env:RDKDC_BRIDGE_URL = $BridgeUrl

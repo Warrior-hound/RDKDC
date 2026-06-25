@@ -58,21 +58,21 @@ The start script creates or updates these files automatically.
 On Windows:
 
 \begin{Verbatim}
-C:\Users\<student>\ros2_ws\rdkdc_bridge\rdkdc_http_bridge.py
-C:\Users\<student>\ros2_ws\matlab\ur5_interface.m
-C:\Users\<student>\ros2_ws\matlab\ur5e_interface.m
-C:\Users\<student>\ros2_ws\matlab\tf_frame.m
-C:\Users\<student>\ros2_ws\src\rdkdc_setup\launch\ur5e_sim.launch.py
+C:\Users\<student>\rdkdc_ws\rdkdc_bridge\rdkdc_http_bridge.py
+C:\Users\<student>\rdkdc_ws\matlab\ur5_interface.m
+C:\Users\<student>\rdkdc_ws\matlab\ur5e_interface.m
+C:\Users\<student>\rdkdc_ws\matlab\tf_frame.m
+C:\Users\<student>\rdkdc_ws\src\rdkdc_setup\launch\ur5e_sim.launch.py
 \end{Verbatim}
 
 On macOS:
 
 \begin{Verbatim}
-~/ros2_ws/rdkdc_bridge/rdkdc_http_bridge.py
-~/ros2_ws/matlab/ur5_interface.m
-~/ros2_ws/matlab/ur5e_interface.m
-~/ros2_ws/matlab/tf_frame.m
-~/ros2_ws/src/rdkdc_setup/launch/ur5e_sim.launch.py
+~/rdkdc_ws/rdkdc_bridge/rdkdc_http_bridge.py
+~/rdkdc_ws/matlab/ur5_interface.m
+~/rdkdc_ws/matlab/ur5e_interface.m
+~/rdkdc_ws/matlab/tf_frame.m
+~/rdkdc_ws/src/rdkdc_setup/launch/ur5e_sim.launch.py
 \end{Verbatim}
 
 If \texttt{ros2\_ws} already exists, the setup does not delete the workspace. It creates the needed folders if missing and overwrites only the generated bridge/helper/setup files listed above.
@@ -92,8 +92,8 @@ The build script builds the Docker image. The start script starts Docker, mounts
 The workspace mount is:
 
 \begin{Verbatim}
-Host:      C:\Users\<student>\ros2_ws
-Docker:    /root/ros2_ws
+Host:      C:\Users\<student>\rdkdc_ws
+Docker:    /root/rdkdc_ws
 \end{Verbatim}
 
 Any files edited under the host \texttt{ros2\_ws} are immediately visible inside Docker at \texttt{/root/ros2\_ws}.
@@ -127,8 +127,8 @@ chmod +x build_ros_mac.sh start_ros_mac.sh stop_ros_mac.sh
 The workspace mount is:
 
 \begin{Verbatim}
-Host:      ~/ros2_ws
-Docker:    /root/ros2_ws
+Host:      ~/rdkdc_ws
+Docker:    /root/rdkdc_ws
 \end{Verbatim}
 
 Any files edited under the host \texttt{ros2\_ws} are immediately visible inside Docker at \texttt{/root/ros2\_ws}.
@@ -144,7 +144,7 @@ To stop:
 After the start script finishes, open the browser VNC desktop. In the Linux terminal inside the Docker/VNC desktop, run:
 
 \begin{Verbatim}
-source /root/ros2_ws/install/setup.bash
+source /root/rdkdc_ws/install/setup.bash
 ros2 launch rdkdc_setup ur5e_sim.launch.py ur_type:=ur5e
 \end{Verbatim}
 
@@ -179,12 +179,12 @@ If MATLAB cannot find \texttt{ur5\_interface}, add the generated MATLAB folder o
 
 Windows:
 \begin{Verbatim}
-addpath('C:\Users\<student>\ros2_ws\matlab')
+addpath('C:\Users\<student>\rdkdc_ws\matlab')
 \end{Verbatim}
 
 macOS:
 \begin{Verbatim}
-addpath('~/ros2_ws/matlab')
+addpath('~/rdkdc_ws/matlab')
 \end{Verbatim}
 
 \section*{Verify The Setup}
